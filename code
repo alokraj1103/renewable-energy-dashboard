@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renewable Energy Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Renewable Energy Dashboard</h1>
+    <div class="container">
+        <div class="controls">
+            <div class="checkbox-group">
+                <label><input type="checkbox" value="Solar" checked> Solar</label>
+                <label><input type="checkbox" value="Wind" checked> Wind</label>
+                <label><input type="checkbox" value="Hydro" checked> Hydro</label>
+                <label><input type="checkbox" value="Geothermal" checked> Geothermal</label>
+            </div>
+
+            <div id="date-range">
+                <label>Start Date: <input type="date" id="start-date"></label>
+                <label>End Date: <input type="date" id="end-date"></label>
+            </div>
+        </div>
+
+        <div id="chart" class="chart"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.checkbox-group {
+    display: flex;
+    gap: 10px;
+}
+
+.chart {
+    height: 60vh;
+}
+
+#date-range {
+    display: flex;
+    gap: 10px;
+}
+
+input[type="date"] {
+    padding: 5px;
+}
+
+const chartElement = document.getElementById('chart');
+const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+const startDateInput = document.getElementById('start-date');
+const endDateInput = document.getElementById('end-date');
+
+const data = generateData();
+
+function generateData() {
+    const dates = [];
+    const solar = [];
+    const wind = [];
+    const hydro = [];
+    const geothermal = [];
+
+    const startDate = new Date("2024-01-01");
+    for (let i = 0; i < 365; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        dates.push(date.toISOString().split('T')[0]);
+        solar.push(Math.random() * (200 - 50) + 50);
+        wind.push(Math.random() * (250 - 70) + 70);
+        hydro.push(Math.random() * (150 - 30) + 30);
+        geothermal.push(Math.random() * (50 - 10) + 10);
+    }
+    return { dates, solar, wind, hydro, geothermal };
+}
+
+function updateChart() {
+    const selectedSources = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+
+    const startDate = new Date(startDateInput.value || "2024-01-01");
+    const endDate = new Date(endDateInput.value || "2024-12-31");
+
+    const filteredDates = data.dates.filter(date => {
+        const d = new Date(date);
+        return d >= startDate && d <= endDate;
+    });
+
+    const traces = selectedSources.map(source => {
+        return {
+            x: filteredDates,
+            y: data[source.toLowerCase()],
+            mode: 'lines',
+            name: source
+        };
+    });
+
+    Plotly.newPlot(chartElement, traces, {
+        title: 'Energy Production Trends',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Energy (MW)' }
+    });
+}
+
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateChart);
+});
+
+startDateInput.addEventListener('change', updateChart);
+endDateInput.addEventListener('change', updateChart);
+
+updateChart();
